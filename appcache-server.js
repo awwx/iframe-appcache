@@ -2,6 +2,15 @@ var crypto = Npm.require('crypto');
 var fs = Npm.require('fs');
 var path = Npm.require('path');
 
+var appcache_in_iframe_html = Assets.getText("appcache-in-iframe.html");
+
+WebApp.connectHandlers.use(function (req, res, next) {
+  if (req.url !== "/appcache-in-iframe.html")
+    return next();
+  res.writeHead(200, {'Content-Type': 'text/html'});
+  res.end(appcache_in_iframe_html, 'utf-8');
+});
+
 Meteor.AppCache = {
   config: function(options) {
     _.each(options, function (value, option) {
@@ -33,11 +42,17 @@ var browserDisabled = function(request) {
   return disabledBrowsers[request.browser.name];
 };
 
+// XXX Inform appcache-client.js when the app cache is enabled for
+// this browser by setting the `meteor-appcache-enabled` attribute on
+// the HTML element.  The might be more sensibly done by, for example,
+// allowing __meteor_runtime_config__ to vary by request, but this
+// works given the current WebApp API.
+
 WebApp.addHtmlAttributeHook(function (request) {
   if (browserDisabled(request))
     return null;
   else
-    return { manifest: "/app.manifest" };
+    return { "meteor-appcache-enabled": "true" };
 });
 
 WebApp.connectHandlers.use(function(req, res, next) {
@@ -45,15 +60,14 @@ WebApp.connectHandlers.use(function(req, res, next) {
     return next();
   }
 
-  // Browsers will get confused if we unconditionally serve the
-  // manifest and then disable the app cache for that browser.  If
-  // the app cache had previously been enabled for a browser, it
-  // will continue to fetch the manifest as long as it's available,
-  // even if we now are not including the manifest attribute in the
-  // app HTML.  (Firefox for example will continue to display "this
-  // website is asking to store data on your computer for offline
-  // use").  Returning a 404 gets the browser to really turn off the
-  // app cache.
+  // Browsers will get confused if we always serve the manifest and
+  // then disable the app cache for that browser.  If the app cache
+  // had previously been enabled for a browser, it will continue to
+  // fetch the manifest as long as it's available, even if we now are
+  // not including the manifest attribute in the app HTML.  (Firefox
+  // for example will continue to display "this website is asking to
+  // store data on your computer for offline use").  Returning a 404
+  // gets the browser to really turn off the app cache.
 
   if (browserDisabled(WebApp.categorizeRequest(req))) {
     res.writeHead(404);
@@ -130,9 +144,6 @@ WebApp.connectHandlers.use(function(req, res, next) {
   manifest += "\n";
 
   manifest += "NETWORK:\n";
-  // TODO adding the manifest file to NETWORK should be unnecessary?
-  // Want more testing to be sure.
-  manifest += "/app.manifest" + "\n";
   _.each(
     [].concat(
       RoutePolicy.urlPrefixesFor('network'),

@@ -1,5 +1,13 @@
 if (window.applicationCache) {
 
+// Thanks to http://labs.ft.com/2012/11/using-an-iframe-to-stop-app-cache-storing-masters/
+//
+Meteor.startup(function () {
+  if ($('html').attr('meteor-appcache-enabled') === 'true')
+    $('body').prepend(
+      '<iframe src="/appcache-in-iframe.html" style="width:0px; height:0px; visibility:hidden; position:absolute; border:none"></iframe>');
+});
+
 var appCacheStatuses = [
   'uncached',
   'idle',

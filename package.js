@@ -10,5 +10,6 @@ Package.on_use(function (api) {
   api.use('underscore', 'server');
   api.use('autoupdate', 'server', {weak: true});
   api.add_files('appcache-client.js', 'client');
+  api.add_files('appcache-in-iframe.html', 'server', {isAsset: true});
   api.add_files('appcache-server.js', 'server');
 });
