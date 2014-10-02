@@ -17,3 +17,11 @@ each route encountered would be added to the application cache as a
 
 This fix uses the iframe technique described in
 ['Fixing' the application cache with an iframe](http://labs.ft.com/2012/11/using-an-iframe-to-stop-app-cache-storing-masters/).
+
+To test this fix, do the following from your Meteor application directory:
+
+```
+$ meteor remove appcache
+$ mkdir packages
+$ (cd packages; git clone https://github.com/awwx/iframe-appcache.git)
+$ meteor add iframe-appcache
